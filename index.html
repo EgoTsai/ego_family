@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>美食大對決 - 選出你最愛的食物！</title>
+   <!-- 載入 Tailwind CSS -->
+   <script src="https://cdn.tailwindcss.com"></script>
+   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+   <style>
+       /* 使用 Inter 作為基礎字型，Noto Sans TC 作為中文字型 */
+       body {
+           font-family: 'Inter', 'Noto Sans TC', sans-serif;
+       }
+       /* 自定義按鈕動態效果 */
+       .choice-btn {
+           transition: all 0.3s ease;
+           transform: scale(1);
+       }
+       .choice-btn:hover {
+           transform: scale(1.03);
+           box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+       }
+       .choice-btn:active {
+           transform: scale(0.98);
+       }
+   </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-4 md:p-8">
+
+
+   <div id="app" class="w-full max-w-4xl mx-auto text-center">
+
+
+       <!-- 歡迎畫面 -->
+       <div id="welcome-screen">
+           <h1 class="text-4xl md:text-5xl font-bold mb-4">美食大對決！</h1>
+           <p class="text-xl text-gray-300 mb-8">贏家將不斷接受挑戰，選出你心目中的 Top 3！</p>
+           <p class="text-lg text-gray-400 mb-8">完成 10 回合後，將顯示本局戰績與全站累積排行榜！</p>
+           <button id="start-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-2xl shadow-lg transition duration-300">
+               開始對決！
+           </button>
+           <!-- *** 新增：清除累積記錄按鈕 *** -->
+           <button id="clear-storage-button" class="block mx-auto mt-6 text-sm text-gray-500 hover:text-red-500 transition duration-300">
+               清除所有累積記錄
+           </button>
+       </div>
+
+
+       <!-- 遊戲畫面 (包含 "重頭開始" 按鈕) -->
+       <div id="game-screen" class="hidden relative pt-10">
+          
+           <button id="restart-game-button" class="absolute top-0 right-0 bg-red-600 hover:bg-red-700 text-white font-semibold py-1 px-3 rounded-full text-sm shadow-lg transition duration-300">
+               重頭開始
+           </button>
+
+
+           <h2 id="progress-counter" class="text-2xl font-semibold text-gray-400 mb-6 text-center">第 1 / 10 場</h2>
+          
+           <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
+               <!-- 選項 A (衛冕者) -->
+               <button id="choice-a" class="choice-btn flex flex-col items-center justify-center bg-gray-800 border-2 border-blue-600 rounded-lg p-8 md:p-12 w-full md:w-2/5 shadow-xl h-48 md:h-64">
+                   <span class ="text-xs text-blue-400 font-bold mb-2">衛冕者</span>
+                   <span id="choice-a-icon" class="text-5xl md:text-6xl mb-4">🥟</span>
+                   <span id="choice-a-name" class="text-2xl md:text-3xl font-bold">小籠包</span>
+               </button>
+
+
+               <span class="text-4xl font-bold text-gray-500 my-4 md:my-0">VS</span>
+
+
+               <!-- 選項 B (挑戰者) -->
+               <button id="choice-b" class="choice-btn flex flex-col items-center justify-center bg-gray-800 border-2 border-gray-700 hover:border-pink-500 rounded-lg p-8 md:p-12 w-full md:w-2/5 shadow-xl h-48 md:h-64">
+                   <span class ="text-xs text-pink-400 font-bold mb-2">挑戰者</span>
+                   <span id="choice-b-icon" class="text-5xl md:text-6xl mb-4">🍝</span>
+                   <span id="choice-b-name" class="text-2xl md:text-3xl font-bold">義大利麵</span>
+               </button>
+           </div>
+
+
+           <!-- 查看結果按鈕 (預設隱藏) -->
+           <button id="view-results-button" class="hidden mt-12 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-2xl shadow-lg transition duration-300">
+               查看我的 Top 3
+           </button>
+       </div>
+
+
+       <!-- 結果畫面 -->
+       <div id="results-screen" class="hidden">
+           <!-- *** 修改點：標題變更 *** -->
+           <h1 class="text-4xl md:text-5xl font-bold mb-8">本局 Top 3 戰績</h1>
+           <div class="bg-gray-800 rounded-lg shadow-xl p-6 md:p-8 max-w-lg mx-auto">
+               <ol id="results-list" class="text-left space-y-4">
+                   <!-- 排名將由 JS 動態填入 -->
+               </ol>
+           </div>
+          
+           <!-- *** 新增：全站累積排行榜 *** -->
+           <h2 class="text-3xl md:text-4xl font-bold mt-16 mb-8">全站累積 Top 10 排行榜</h2>
+           <div class="bg-gray-800 rounded-lg shadow-xl p-6 md:p-8 max-w-lg mx-auto">
+               <ol id="all-time-results-list" class="text-left space-y-4">
+                   <!-- 累積排名將由 JS 動態填入 -->
+               </ol>
+           </div>
+          
+           <button id="restart-button" class="mt-12 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-2xl shadow-lg transition duration-300">
+               回到首頁
+           </button>
+       </div>
+
+
+   </div>
+
+
+   <script>
+       // --- 食物資料庫 (您可以擴充這些列表) ---
+       const chineseFoods = [
+           { name: '小籠包', icon: '🥟' }, { name: '牛肉麵', icon: '🍜' }, { name: '麻婆豆腐', icon: '🥘' }, { name: '宮保雞丁', icon: '🍗' },
+           { name: '北京烤鴨', icon: '🦆' }, { name: '糖醋里肌', icon: '🐷' }, { name: '紅燒獅子頭', icon: '🦁' }, { name: '佛跳牆', icon: '🍲' },
+           { name: '東坡肉', icon: '🍖' }, { name: '擔擔麵', icon: '🍝' }, { name: '炒飯', icon: '🍚' }, { name: '炒麵', icon: '🥡' },
+           { name: '餃子', icon: '🥟' }, { name: '餛飩', icon: '🥣' }, { name: '春捲', icon: '🫔' }, { name: '蔥油餅', icon: '🥞' },
+           { name: '鍋貼', icon: '😋' }, { name: '燒賣', icon: '🤤' }, { name: '腸粉', icon: '🥢' }, { name: '叉燒包', icon: ' bun' },
+           { name: '麻辣火鍋', icon: '🌶️' }, { name: '羊肉串', icon: '🍢' }, { name: '水煮魚', icon: '🐟' }, { name: '酸菜白肉鍋', icon: '🍲' },
+           { name: '油條', icon: '🥖' }, { name: '豆漿', icon: '🥛' }, { name: '月餅', icon: '🥮' }, { name: '炸醬麵', icon: '🍜' },
+           { name: '海蜇皮', icon: '🌊' }, { name: '醉雞', icon: '🐔' }
+       ];
+       const westernFoods = [
+           { name: '義大利麵', icon: '🍝' }, { name: '披薩', icon: '🍕' }, { name: '牛排', icon: '🥩' }, { name: '漢堡', icon: '🍔' },
+           { name: '熱狗', icon: '🌭' }, { name: '炸雞', icon: '🍗' }, { name: '燉飯', icon: '🥘' }, { name: '沙拉', icon: '🥗' },
+           { name: '三明治', icon: '🥪' }, { name: '潛艇堡', icon: '🥖' }, { name: '墨西哥捲餅', icon: '🌯' }, { name: '塔可', icon: '🌮' },
+           { name: '肋排', icon: '🍖' }, { name: '烤雞', icon: '🐔' }, { name: '濃湯', icon: '🥣' }, { name: '焗烤', icon: '🧀' },
+           { name: '炸魚薯條', icon: '🐟' }, { name: '班尼迪克蛋', icon: '🍳' }, { name: '鬆餅', icon: '🧇' }, { name: '法式吐司', icon: '🍞' },
+           { name: '起司拼盤', icon: '🧀' }, { name: '龍蝦', icon: '🦞' }, { name: '烤馬鈴薯', icon: '🥔' }, { name: '法式洋蔥湯', icon: '🧅' },
+           { name: '可麗餅', icon: '🥞' }, { name: '西班牙海鮮飯', icon: '🥘' }, { name: '千層麵', icon: ' lasagna' }, { name: '蘋果派', icon: '🥧' },
+           { name: '布朗尼', icon: '🍫' }, { name: '培根', icon: '🥓' }
+       ];
+       const taiwaneseFoods = [
+           { name: '豬血糕', icon: '🍢' }, { name: '滷肉飯', icon: '🍚' }, { name: '蚵仔煎', icon: '🦪' }, { name: '臭豆腐', icon: '🤢' },
+           { name: '珍珠奶茶', icon: '🧋' }, { name: '豆花', icon: '🍮' }, { name: '刈包', icon: '🍔' }, { name: '肉圓', icon: '🍘' },
+           { name: '筒仔米糕', icon: '🍙' }, { name: '大腸麵線', icon: '🍜' }, { name: '雞排', icon: '🍗' }, { name: '鹹酥雞', icon: '🐔' },
+           { name: '甜不辣', icon: '🍢' }, { name: '肉粽', icon: '🍙' }, { name: '碗粿', icon: '🥣' }, { name: '米粉湯', icon: '🍲' },
+           { name: '藥燉排骨', icon: '🍖' }, { name: '地瓜球', icon: '🍠' }, { name: '車輪餅', icon: '🥞' }, { name: '胡椒餅', icon: '🫓' },
+           { name: '牛肉乾', icon: ' jerky' }, { name: '鳳梨酥', icon: '🍍' }, { name: '愛玉冰', icon: '🍧' }, { name: '蔥抓餅', icon: '🥞' },
+           { name: '鼎邊趖', icon: '🥣' }, { name: '棺材板', icon: '🍞' }, { name: '蚵嗲', icon: '🦪' }, { name: '潤餅', icon: '🌯' },
+           { name: '四神湯', icon: '🍲' }, { name: '麻油雞', icon: '🐔' }
+       ];
+       const japaneseFoods = [
+           { name: '壽司', icon: '🍣' }, { name: '拉麵', icon: '🍜' }, { name: '生魚片', icon: 'Sashimi' }, { name: '天婦羅', icon: '🍤' },
+           { name: '鰻魚飯', icon: '鰻' }, { name: '味噌湯', icon: '🥣' }, { name: '章魚燒', icon: '🐙' }, { name: '大阪燒', icon: '🍳' },
+           { name: '豬排飯', icon: '🐷' }, { name: '咖哩飯', icon: '🍛' }, { name: '烏龍麵', icon: '🍲' }, { name: '茶碗蒸', icon: '🍮' },
+           { name: '關東煮', icon: '🍢' }, { name: '親子丼', icon: '🐔' }, { name: '飯糰', icon: '🍙' }, { name: '蕎麥麵', icon: 'Soba' },
+           { name: '壽喜燒', icon: '🍲' }, { name: '串燒', icon: '🍢' }, { name: '玉子燒', icon: '🍳' }, { name: '懷石料理', icon: '🍱' },
+           { name: '和牛', icon: '🐃' }, { name: '茶泡飯', icon: '🍵' }, { name: '明太子', icon: ' Mentaiko' }, { name: '納豆', icon: '🤢' },
+           { name: '麻糬', icon: '🍡' }, { name: '可樂餅', icon: '🍘' }, { name: '日式炸雞', icon: '🍗' }, { name: '牛丼', icon: '🍚' },
+           { name: '鮭魚卵', icon: ' Ikura' }, { name: '海膽', icon: ' Uni' }
+       ];
+
+
+       // --- 應用程式狀態 ---
+       let allFoods = []; // 儲存"本局"遊戲的食物狀態
+       let currentMatch = 0;
+       const totalMatches = 10;
+       let choiceA = null; // 衛冕者
+       let choiceB = null; // 挑戰者
+
+
+       // --- DOM 元素 ---
+       const welcomeScreen = document.getElementById('welcome-screen');
+       const gameScreen = document.getElementById('game-screen');
+       const resultsScreen = document.getElementById('results-screen');
+      
+       const startButton = document.getElementById('start-button');
+       const progressCounter = document.getElementById('progress-counter');
+      
+       const choiceAButton = document.getElementById('choice-a');
+       const choiceBButton = document.getElementById('choice-b');
+       const choiceAName = document.getElementById('choice-a-name');
+       const choiceBName = document.getElementById('choice-b-name');
+       const choiceAIcon = document.getElementById('choice-a-icon');
+       const choiceBIcon = document.getElementById('choice-b-icon');
+      
+       const viewResultsButton = document.getElementById('view-results-button');
+       const resultsList = document.getElementById('results-list');
+       // *** 新增：全站排行榜列表 ***
+       const allTimeResultsList = document.getElementById('all-time-results-list');
+      
+       const restartButton = document.getElementById('restart-button');
+       const restartGameButton = document.getElementById('restart-game-button');
+       // *** 新增：清除按鈕 ***
+       const clearStorageButton = document.getElementById('clear-storage-button');
+
+
+       // --- 核心功能 ---
+
+
+       /**
+        * 初始化或重置"本局"遊戲的食物資料
+        * 這裡只建立 "本局" 要用的乾淨資料
+        */
+       function initializeFoods() {
+           const combinedList = [...chineseFoods, ...westernFoods, ...taiwaneseFoods, ...japaneseFoods];
+          
+           // 重新建立食物陣列，所有計數器歸零
+           allFoods = combinedList.map(food => ({
+               ...food,
+               wins: 0,
+               appearances: 0,
+               score: 0 // score 其實可以移除，因為我們只看 wins
+           }));
+           currentMatch = 0;
+       }
+
+
+       /**
+        * 開始遊戲
+        */
+       function startGame() {
+           initializeFoods(); // 在這裡清除 "本局" 舊紀錄
+           welcomeScreen.classList.add('hidden');
+           resultsScreen.classList.add('hidden');
+           gameScreen.classList.remove('hidden');
+           viewResultsButton.classList.add('hidden');
+          
+           // 確保對戰按鈕顯示
+           choiceAButton.classList.remove('hidden');
+           choiceBButton.classList.remove('hidden');
+           document.querySelector('#game-screen span.text-4xl').classList.remove('hidden');
+
+
+           pickFirstMatch();
+       }
+
+
+       /**
+        * 回到歡迎畫面 (清除 "本局" 紀錄的入口)
+        */
+       function goToWelcome() {
+           gameScreen.classList.add('hidden');
+           resultsScreen.classList.add('hidden');
+           welcomeScreen.classList.remove('hidden');
+       }
+      
+       /**
+        * 挑選第一場對決 (隨機 A vs 隨機 B)
+        */
+       function pickFirstMatch() {
+           currentMatch = 1;
+           progressCounter.textContent = `第 ${currentMatch} / ${totalMatches} 場`;
+
+
+           let indexA, indexB;
+           do {
+               indexA = Math.floor(Math.random() * allFoods.length);
+               indexB = Math.floor(Math.random() * allFoods.length);
+           } while (indexA === indexB); // 確保兩者不同
+
+
+           choiceA = allFoods[indexA];
+           choiceB = allFoods[indexB];
+
+
+           updateMatchUI();
+       }
+
+
+       /**
+        * 更新對決畫面 (衛冕者 vs 挑戰者)
+        */
+       function updateMatchUI() {
+           choiceAName.textContent = choiceA.name;
+           choiceAIcon.textContent = choiceA.icon;
+           choiceBName.textContent = choiceB.name;
+           choiceBIcon.textContent = choiceB.icon;
+       }
+
+
+       /**
+        * 處理使用者的選擇
+        * @param {object} winner - 被選擇的食物物件
+        * @param {object} loser - 未被選擇的食物物件
+        */
+       function makeChoice(winner, loser) {
+           // 紀錄勝負與登場 (只在 "allFoods" 這個 "本局" 變數中)
+           winner.wins++;
+           winner.appearances++;
+           loser.appearances++;
+
+
+           // 檢查遊戲是否結束
+           if (currentMatch >= totalMatches) {
+               showResultsButton(); // 顯示"查看結果"按鈕
+               return;
+           }
+
+
+           // 遊戲繼續：贏家成為新的衛冕者 (choiceA)
+           currentMatch++;
+           progressCounter.textContent = `第 ${currentMatch} / ${totalMatches} 場`;
+          
+           choiceA = winner; // 贏家留下
+
+
+           // 挑選新的挑戰者 (choiceB)
+           let challengerIndex;
+           do {
+               challengerIndex = Math.floor(Math.random() * allFoods.length);
+           } while (allFoods[challengerIndex].name === choiceA.name); // 確保挑戰者不是衛冕者自己
+          
+           choiceB = allFoods[challengerIndex];
+
+
+           // 更新畫面
+           updateMatchUI();
+       }
+
+
+       /**
+        * 顯示查看結果按鈕
+        */
+       function showResultsButton() {
+           // 隱藏對戰按鈕和 "VS"
+           choiceAButton.classList.add('hidden');
+           choiceBButton.classList.add('hidden');
+           document.querySelector('#game-screen span.text-4xl').classList.add('hidden');
+          
+           progressCounter.textContent = `已完成 ${totalMatches} 場對決！`;
+           viewResultsButton.classList.remove('hidden'); // 顯示查看結果按鈕
+       }
+
+
+       /**
+        * 計算並顯示最終結果 (本局 Top 3 + 全站 Top 10)
+        */
+       function showResults() {
+          
+           // --- 1. 處理 "本局" Top 3 ---
+           const rankedFoodsThisGame = allFoods
+               .filter(food => food.wins > 0) // 只顯示本局贏過的
+               .sort((a, b) => b.wins - a.wins);
+
+
+           const top3ThisGame = rankedFoodsThisGame.slice(0, 3);
+
+
+           resultsList.innerHTML = ''; // 清空舊列表
+
+
+           if (top3ThisGame.length === 0) {
+               resultsList.innerHTML = '<li class="text-gray-400 text-center">本局沒有任何食物獲勝...</li>';
+           } else {
+               top3ThisGame.forEach((food, index) => {
+                   const li = document.createElement('li');
+                   li.className = 'text-xl flex items-center justify-between p-3 bg-gray-700 rounded';
+                   li.innerHTML = `
+                       <span class="flex items-center">
+                           <span class="text-2xl font-bold w-10 text-yellow-400">#${index + 1}</span>
+                           <span class="text-3xl mx-3">${food.icon}</span>
+                           <span class="ml-2">${food.name}</span>
+                       </span>
+                       <span class="text-sm font-mono text-gray-300 text-right">
+                           ${food.wins} 勝
+                           <br>
+                           <span class="text-xs text-gray-400">(${food.wins}勝 / ${food.appearances}場)</span>
+                       </span>
+                   `;
+                   resultsList.appendChild(li);
+               });
+           }
+
+
+           // --- 2. 處理 "全站" 累積 Top 10 ---
+          
+           // 從 localStorage 讀取舊的總紀錄
+           let allTimeScores = JSON.parse(localStorage.getItem('foodTournamentScores') || '[]');
+          
+           // 為了方便查找，將陣列轉為 Map (key: 食物名稱, value: 食物物件)
+           const scoreMap = new Map(allTimeScores.map(f => [f.name, f]));
+
+
+           // 遍歷 "本局" 玩過的食物 (allFoods)
+           allFoods.forEach(thisGameFood => {
+               if (thisGameFood.appearances > 0) { // 只要有登場過，就要更新
+                   // 從 Map 中取得該食物的 "總紀錄"
+                   const allTimeData = scoreMap.get(thisGameFood.name) || {
+                       name: thisGameFood.name,
+                       icon: thisGameFood.icon,
+                       wins: 0,
+                       appearances: 0
+                   };
+                  
+                   // 將 "本局" 戰績累加到 "總紀錄"
+                   allTimeData.wins += thisGameFood.wins;
+                   allTimeData.appearances += thisGameFood.appearances;
+                  
+                   // 將更新後的 "總紀錄" 放回 Map
+                   scoreMap.set(allTimeData.name, allTimeData);
+               }
+           });
+
+
+           // 將 Map 轉回陣列，這就是最新的 "全站總紀錄"
+           const newAllTimeScores = Array.from(scoreMap.values());
+
+
+           // 將最新的 "全站總紀錄" 存回 localStorage
+           localStorage.setItem('foodTournamentScores', JSON.stringify(newAllTimeScores));
+
+
+           // --- 3. 顯示 "全站" 累積 Top 10 ---
+
+
+           // 根據 "總勝場 (wins)" 排序
+           newAllTimeScores.sort((a, b) => b.wins - a.wins);
+
+
+           const allTimeTop10 = newAllTimeScores.slice(0, 10);
+          
+           allTimeResultsList.innerHTML = ''; // 清空舊列表
+
+
+           if (allTimeTop10.length === 0) {
+               allTimeResultsList.innerHTML = '<li class="text-gray-400 text-center">尚未有累積記錄</li>';
+           } else {
+               allTimeTop10.forEach((food, index) => {
+                   const li = document.createElement('li');
+                   li.className = 'text-xl flex items-center justify-between p-3 bg-gray-700 rounded';
+                   li.innerHTML = `
+                       <span class="flex items-center">
+                           <span class="text-2xl font-bold w-10 text-yellow-400">#${index + 1}</span>
+                           <span class="text-3xl mx-3">${food.icon}</span>
+                           <span class="ml-2">${food.name}</span>
+                       </span>
+                       <span class="text-sm font-mono text-gray-300 text-right">
+                           ${food.wins} 勝
+                           <br>
+                           <span class="text-xs text-gray-400">(${food.wins}勝 / ${food.appearances}場)</span>
+                       </span>
+                   `;
+                   allTimeResultsList.appendChild(li);
+               });
+           }
+
+
+           // 顯示結果畫面
+           gameScreen.classList.add('hidden');
+           resultsScreen.classList.remove('hidden');
+       }
+
+
+       // --- 事件監聽 ---
+       startButton.addEventListener('click', startGame);
+      
+       choiceAButton.addEventListener('click', () => {
+           if (choiceA && choiceB) makeChoice(choiceA, choiceB);
+       });
+      
+       choiceBButton.addEventListener('click', () => {
+           if (choiceA && choiceB) makeChoice(choiceB, choiceA);
+       });
+
+
+       viewResultsButton.addEventListener('click', showResults);
+      
+       // D 兩個重啟按鈕都呼叫 goToWelcome
+       restartButton.addEventListener('click', goToWelcome);
+       restartGameButton.addEventListener('click', goToWelcome);
+
+
+       // *** 新增：清除按鈕的監聽 ***
+       clearStorageButton.addEventListener('click', () => {
+           // 使用 confirm 讓使用者再次確認
+           if (confirm('您確定要清除所有累積的勝場記錄嗎？此動作無法復原。')) {
+               localStorage.removeItem('foodTournamentScores');
+               // 立即更新畫面上的全站排行榜 (如果正在顯示)
+               if (!resultsScreen.classList.contains('hidden')) {
+                   allTimeResultsList.innerHTML = '<li class="text-gray-400 text-center">所有累積記錄已清除</li>';
+               }
+               // 使用 alert 提示使用者
+               alert('所有累積記錄已清除。');
+           }
+       });
+
+
+   </script>
+</body>
+</html>
+
+
+
+
+
